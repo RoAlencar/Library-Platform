@@ -1,0 +1,450 @@
+{
+  "info": {
+    "name": "Library Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Fluxo completo do Tech Challenge: usuários, livros, empréstimos, reservas e relatórios. Rode as requests na ordem — os IDs são capturados automaticamente nas variáveis da collection."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "userId", "value": "" },
+    { "key": "user2Id", "value": "" },
+    { "key": "bookId", "value": "" },
+    { "key": "book2Id", "value": "" },
+    { "key": "loanId", "value": "" },
+    { "key": "reservationId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1 - Users",
+      "item": [
+        {
+          "name": "Create user (member)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('userId', body.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Silva\",\n  \"email\": \"maria.silva@example.com\",\n  \"type\": \"LIBRARY_MEMBER\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create user 2 (librarian)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('user2Id', body.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Bibliotecário\",\n  \"email\": \"joao.biblio@example.com\",\n  \"type\": \"LIBRARIAN\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List users (paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get user by id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Update user",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/users/{{userId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Silva Souza\",\n  \"email\": \"maria.silva@example.com\",\n  \"type\": \"LIBRARY_MEMBER\",\n  \"active\": true\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 - Books",
+      "item": [
+        {
+          "name": "Create book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('bookId', body.id);",
+                  "pm.test('available', () => body.availability === 'AVAILABLE');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/books",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Clean Architecture\",\n  \"author\": \"Robert C. Martin\",\n  \"description\": \"A craftsman's guide to software structure and design\",\n  \"isbn\": \"978-0134494166\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create book 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('book2Id', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/books",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Domain-Driven Design\",\n  \"author\": \"Eric Evans\",\n  \"description\": \"Tackling complexity in the heart of software\",\n  \"isbn\": \"978-0321125217\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List books (paginated)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search books by name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?name=clean&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [
+                { "key": "name", "value": "clean" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search books by author",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?author=evans&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [
+                { "key": "author", "value": "evans" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search books by ISBN",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/books?isbn=978-0134494166",
+              "host": ["{{baseUrl}}"],
+              "path": ["books"],
+              "query": [{ "key": "isbn", "value": "978-0134494166" }]
+            }
+          }
+        },
+        {
+          "name": "Get book by id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/books/{{bookId}}"
+          }
+        },
+        {
+          "name": "Update book",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/books/{{book2Id}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Domain-Driven Design (2nd print)\",\n  \"author\": \"Eric Evans\",\n  \"description\": \"Tackling complexity in the heart of software\",\n  \"isbn\": \"978-0321125217\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 - Loans",
+      "item": [
+        {
+          "name": "Borrow book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('loanId', body.id);",
+                  "pm.test('status ACTIVE', () => body.status === 'ACTIVE');",
+                  "pm.test('dueDate set', () => !!body.dueDate);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/loans",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"bookId\": \"{{bookId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get loan by id",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/loans/{{loanId}}"
+          }
+        },
+        {
+          "name": "List active loans",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/loans/active?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["loans", "active"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reserve borrowed book (user 2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('reservationId', body.id);",
+                  "pm.test('status RESERVED', () => body.status === 'RESERVED');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/loans/{{loanId}}/reserve",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user2Id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Return book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('status RETURNED', () => body.status === 'RETURNED');",
+                  "pm.test('returnDate set', () => !!body.returnDate);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/loans/{{loanId}}/return"
+          }
+        },
+        {
+          "name": "Loans of user (history)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}/loans?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}", "loans"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 - Reports",
+      "item": [
+        {
+          "name": "Top 20 most borrowed",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/most-borrowed"
+          }
+        },
+        {
+          "name": "Active loans report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/active-loans"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5 - Error cases",
+      "item": [
+        {
+          "name": "Create user - invalid email (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/users",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"X\",\n  \"email\": \"not-an-email\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create book - invalid ISBN (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/books",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bad Book\",\n  \"author\": \"Nobody\",\n  \"isbn\": \"abc\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get book - not found (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('status 404', () => pm.response.to.have.status(404));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/books/00000000-0000-0000-0000-000000000000"
+          }
+        },
+        {
+          "name": "Borrow already-borrowed book (409/422)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/loans",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user2Id}}\",\n  \"bookId\": \"{{bookId}}\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
