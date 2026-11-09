@@ -3,6 +3,8 @@ package br.com.fiap.shared.domain.entity;
 import br.com.fiap.shared.domain.valueObject.Email;
 import br.com.fiap.shared.domain.valueObject.Name;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -19,7 +21,7 @@ public abstract class User {
         this.id = Objects.requireNonNull(id, "id must not be null");
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.email = Objects.requireNonNull(email, "email must not be null");
-        this.books = books;
+        this.books = books == null ? new ArrayList<>() : new ArrayList<>(books);
         this.is_active = is_active;
     }
 
@@ -33,6 +35,10 @@ public abstract class User {
 
     public Email getEmail() {
         return email;
+    }
+
+    public List<Book> getBooks() {
+        return Collections.unmodifiableList(books);
     }
 
     public boolean isActive() {
